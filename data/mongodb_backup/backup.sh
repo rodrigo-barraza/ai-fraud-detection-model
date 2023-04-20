@@ -1,0 +1,3 @@
+mongodump --host EinsteinExchange-shard-0/einsteinexchange-shard-00-00-e75dw.mongodb.net:27017,einsteinexchange-shard-00-01-e75dw.mongodb.net:27017,einsteinexchange-shard-00-02-e75dw.mongodb.net:27017,einsteinexchange-shard-00-03-e75dw.mongodb.net:27017,einsteinexchange-shard-00-04-e75dw.mongodb.net:27017 \
+--ssl \
+--username MONGOUSER --password MONGOPASSWORD --authenticationDatabase admin --db production

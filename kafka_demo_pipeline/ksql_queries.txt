@@ -1,0 +1,8 @@
+CREATE STREAM event_stream (metadata STRING, eventCategory STRING, eventAction STRING) WITH (kafka_topic = 'events', value_format = 'json');
+
+CREATE STREAM user_eventtypes as SELECT extractjsonfield(metadata, '$.email') as email, concat(concat(eventcategory,'_'),eventaction) as eventtype from event_stream;
+
+CREATE TABLE events_per_user AS SELECT email, eventtype, COUNT(*) AS events FROM user_eventtypes WINDOW TUMBLING (SIZE 60 minutes) GROUP BY email, eventtype;
+
+CREATE TABLE events_per_type AS SELECT eventtype, COUNT(*) AS events FROM user_eventtypes WINDOW TUMBLING (SIZE 60 minutes) GROUP BY eventtype;
+
