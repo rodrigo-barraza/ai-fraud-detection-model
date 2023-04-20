@@ -1,0 +1,6 @@
+.ipynb_checkpoints
+.DS_Store
+.Rproj.user
+.vscode
+clean_repo_script.sh
+/.idea/

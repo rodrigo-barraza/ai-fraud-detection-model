@@ -1,0 +1,5 @@
+include einstein_exchange_components/bundle.js
+include einstein_exchange_components/bundle.js.map
+include einstein_exchange_components/metadata.json
+include README.md
+include LICENSE.md

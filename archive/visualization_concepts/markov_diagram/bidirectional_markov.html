@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.link {
+  fill: none;
+  stroke: #666;
+  /* stroke-width: 1px; */
+}
+
+#licensing {
+  fill: green;
+}
+
+.link.licensing {
+  stroke: green;
+}
+
+.link.resolved {
+  stroke-dasharray: 0,2 1;
+}
+
+circle {
+  fill: #2d2abe;
+  /* stroke: #333; */
+  /* stroke-width: 1.5px; */
+}
+
+text {
+  font: 10px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script>
+
+
+var nodes = [{id: "buy_fulfilled", size: 1.5789732948604038}, 
+{id: "buy_request", size: 1.498832799364988}, 
+{id: "buy_transfer-funds", size: 1.9688499200639489}, 
+{id: "customer-vault_buy", size: 3.9910043502858246}, 
+{id: "customer-vault_completed", size: 1.0859608730544028}, 
+{id: "customer-vault_failed", size: 2.818875512881971}, 
+{id: "customer-vault_request", size: 2.9430295555843045}, 
+{id: "login_auth", size: 0.01744223217079693}];
+
+
+var raw_links = [{source: "buy_fulfilled", target: "buy_transfer-funds", thickness: 0.5580940731239178}, 
+{source: "buy_fulfilled", target: "customer-vault_buy", thickness: 3.793428015115641}, 
+{source: "buy_fulfilled", target: "customer-vault_completed", thickness: 4.128411654946481}, 
+{source: "buy_request", target: "buy_fulfilled", thickness: 0.6141475567901442}, 
+{source: "buy_request", target: "customer-vault_completed", thickness: 3.2407513733626025}, 
+{source: "buy_request", target: "customer-vault_failed", thickness: 2.6811117327794896}, 
+{source: "buy_request", target: "customer-vault_request", thickness: 3.475239367470549}, 
+{source: "buy_transfer-funds", target: "customer-vault_buy", thickness: 4.655821274738739}, 
+{source: "buy_transfer-funds", target: "customer-vault_completed", thickness: 2.899470358068031}, 
+{source: "customer-vault_buy", target: "buy_transfer-funds", thickness: 3.707462661449788}, 
+{source: "customer-vault_buy", target: "customer-vault_completed", thickness: 4.408494329109561}, 
+{source: "customer-vault_completed", target: "buy_fulfilled", thickness: 3.8114005513313645}, 
+{source: "customer-vault_completed", target: "buy_request", thickness: 2.5361563533947544}, 
+{source: "customer-vault_completed", target: "buy_transfer-funds", thickness: 4.407328845061999}, 
+{source: "customer-vault_completed", target: "customer-vault_buy", thickness: 3.720023980815348}, 
+{source: "customer-vault_completed", target: "customer-vault_completed", thickness: 0.5614450830237033}, 
+{source: "customer-vault_completed", target: "customer-vault_request", thickness: 2.9225079362625235}, 
+{source: "customer-vault_completed", target: "login_auth", thickness: 0.06435704635789487}, 
+{source: "customer-vault_failed", target: "customer-vault_completed", thickness: 3.1777464325915363}, 
+{source: "customer-vault_failed", target: "login_auth", thickness: 0.7337992267130502}, 
+{source: "customer-vault_request", target: "buy_fulfilled", thickness: 3.865718794473465}, 
+{source: "customer-vault_request", target: "buy_request", thickness: 3.1358772794848226}, 
+{source: "customer-vault_request", target: "customer-vault_completed", thickness: 2.841552156821338}, 
+{source: "customer-vault_request", target: "customer-vault_failed", thickness: 3.097789055989251}, 
+{source: "customer-vault_request", target: "customer-vault_request", thickness: 0.6285853670005171}, 
+{source: "login_auth", target: "customer-vault_completed", thickness: 0.06085610244674878}, 
+{source: "login_auth", target: "login_auth", thickness: 0.013484745693963875}];
+
+var nodeById = d3.map(nodes, function(d) { return d.id; });
+
+var links = [];
+
+raw_links.forEach(function(link) {
+    var s = nodeById.get(link.source),
+        t = nodeById.get(link.target),
+        thickness = linkthickness(link.thickness); // intermediate node
+    links.push({source: s, target: t, thickness: thickness});
+});
+
+var width = 2400,
+    height = 1600;
+
+var force = d3.layout.force()
+    .nodes(d3.values(nodes))
+    .links(links)
+    .size([width, height])
+    .linkDistance(300)
+    .charge(-300)
+    .on("tick", tick)
+    .start();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// Per-type markers, as they don't inherit styles.
+svg.append("defs").selectAll("marker")
+    .data(force.links())
+  .enter().append("marker")
+    .attr("id", function(d) {return d.target.id+"-"+d.source.id+"arrow"; })
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 7.5)
+    .attr("refY", 0)
+    .attr("markerWidth", 4)//function(d) {return d.thickness; })
+    .attr("markerHeight", 4)//function(d) { return d.thickness; })
+    .attr("orient", "auto")
+  .append("path")   
+    .attr("d", "M0,-5L10,0L0,5");
+
+var path = svg.append("g").selectAll("path")
+    .data(force.links())
+  .enter().append("path")
+    .attr("class", function(d) { return "link " + d.target.id+"-"+d.source.id; })
+    .attr("marker-end", function(d) { return "url(#" + d.target.id+"-"+d.source.id + "arrow"+")"; });
+
+var circle = svg.append("g").selectAll("circle")
+    .data(force.nodes())
+  .enter().append("circle")
+    .attr("r", function(d) {
+        
+        if (d.size > 0) {
+            // return (d.size+10);
+            return d.size+5;
+        }
+        return d.size;
+    })
+    .call(force.drag);
+
+var text = svg.append("g").selectAll("text")
+    .data(force.nodes())
+  .enter().append("text")
+    .attr("x", 8)
+    .attr("y", ".31em")
+    .text(function(d) { if (d.size > 0) return d.id; });
+
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+  path.attr("d", linkArc);
+  path.attr('stroke-width', function(d) {
+      
+    return linkthickness(d.thickness)/3;});
+  circle.attr("transform", transform);
+  text.attr("transform", transform);
+}
+
+function linkArc(d) {
+
+  var dx = (d.target.x - d.source.x),
+      dy = (d.target.y - d.source.y),
+      dr = Math.sqrt(dx * dx + dy * dy);
+
+  var x_end= d.target.x - ((nodesize(d.target.size)+linkthickness(d.thickness)/3)*(d.target.x - d.source.x)/dr);
+  var y_end = d.target.y - ((nodesize(d.target.size)+linkthickness(d.thickness)/3)*(d.target.y - d.source.y)/dr);
+
+  var x_start = d.source.x + ((nodesize(d.source.size)+linkthickness(d.thickness)/3)*(d.target.x - d.source.x)/dr);
+  var y_start = d.source.y + ((nodesize(d.source.size)+linkthickness(d.thickness)/3)*(d.target.y - d.source.y)/dr);
+
+
+  return "M" + x_start + "," + y_start + "A" + dr + "," + dr + " 0 0,1 " + (x_end) + "," + (y_end);
+}
+
+function transform(d) {
+  return "translate(" + d.x + "," + d.y + ")";
+}
+
+// function to resize nodes
+function nodesize(size) {
+    if (size > 0) {
+            // return (d.size+10);
+            return size+5;
+        }
+        return size;
+}
+
+// function to resize nodes
+function linkthickness(thickness) {
+    if (thickness > 0) {
+            // return (d.size+10);
+            return thickness*1.5;
+        }
+        return thickness;
+}
+
+
+</script>

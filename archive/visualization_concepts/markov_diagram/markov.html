@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Force Layout Example 1</title>
+    <style>
+
+.node {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.link {
+    stroke: #777;
+    stroke-width: 2px;
+}
+
+    </style>
+</head>
+<body>
+    <script src='http://d3js.org/d3.v3.min.js'></script>
+    <script>
+
+// Define the dimensions of the visualization. We're using
+// a size that's convenient for displaying the graphic on
+// http://jsDataV.is
+
+var width = 640,
+    height = 480;
+
+// Define the data for the example. In general, a force layout
+// requires two data arrays. The first array, here named `nodes`,
+// contains the object that are the focal point of the visualization.
+// The second array, called `links` below, identifies all the links
+// between the nodes. (The more mathematical term is "edges.")
+
+// For the simplest possible example we only define two nodes. As
+// far as D3 is concerned, nodes are arbitrary objects. Normally the
+// objects wouldn't be initialized with `x` and `y` properties like
+// we're doing below. When those properties are present, they tell
+// D3 where to place the nodes before the force layout starts its
+// magic. More typically, they're left out of the nodes and D3 picks
+// random locations for each node. We're defining them here so we can
+// get a consistent application of the layout which lets us see the
+// effects of different properties.
+
+var nodes = [
+    { x:   width/3, y: height/2 },
+    { x: 2*width/3, y: height/2 }
+];
+
+// Add nodes from Einstein
+var nodes = [{index: 0,  name: "buy_request", size: 9.424861753064594},
+{index: 1,  name: "customer-vault_failed", size: 17.72546745658856},
+{index: 2,  name: "buy_send-blockio", size: 0.0},
+{index: 3,  name: "user-interaction_click", size: 0.0},
+{index: 4,  name: "interac_fulfilled", size: 0.0},
+{index: 5,  name: "enrollment-check_rejected", size: 0.0},
+{index: 6,  name: "transaction_withdraw-request", size: 0.0},
+{index: 7,  name: "customer-vault_buy", size: 25.09597086029844},
+{index: 8,  name: "interac_rejected", size: 0.0},
+{index: 9,  name: "buy_rejected", size: 0.0},
+{index: 10,  name: "enrollment-check_fulfilled", size: 0.0},
+{index: 11,  name: "customer-vault_request", size: 18.50616473586436},
+{index: 12,  name: "buy_fulfilled", size: 9.92879594184562},
+{index: 13,  name: "interac_transfer-funds", size: 0.0},
+{index: 14,  name: "user-flow_navigate", size: 0.0},
+{index: 15,  name: "enrollment-check_request", size: 0.0},
+{index: 16,  name: "customer-vault_completed", size: 6.828667682019876},
+{index: 17,  name: "login_auth", size: 0.10967909625694364},
+{index: 18,  name: "buy_transfer-funds", size: 12.38039247406161},
+{index: 19,  name: "interac_request", size: 0.0}];
+
+// The `links` array contains objects with a `source` and a `target`
+// property. The values of those properties are the indices in
+// the `nodes` array of the two endpoints of the link.
+
+var links = [
+    { source: 0, target: 1 }
+];
+
+var links = [{source: 0, target: 1, thickness: 0.19011406844106465},
+{source: 0, target: 11, thickness: 0.19011406844106463},
+{source: 0, target: 12, thickness: 0.19011406844106463},
+{source: 0, target: 16, thickness: 0.19011406844106463},
+{source: 1, target: 16, thickness: 0.38910505836575876},
+{source: 1, target: 17, thickness: 0.38910505836575876},
+{source: 7, target: 16, thickness: 0.37174721189591076},
+{source: 7, target: 18, thickness: 0.3717472118959108},
+{source: 11, target: 0, thickness: 0.09310986964618251},
+{source: 11, target: 1, thickness: 0.0931098696461825},
+{source: 11, target: 11, thickness: 0.0931098696461825},
+{source: 11, target: 12, thickness: 0.0931098696461825},
+{source: 11, target: 16, thickness: 0.09310986964618251},
+{source: 12, target: 7, thickness: 0.3717472118959108},
+{source: 12, target: 16, thickness: 0.3717472118959108},
+{source: 12, target: 18, thickness: 0.3717472118959108},
+{source: 16, target: 0, thickness: 0.043233895373973194},
+{source: 16, target: 7, thickness: 0.0432338953739732},
+{source: 16, target: 11, thickness: 0.0432338953739732},
+{source: 16, target: 12, thickness: 0.043233895373973194},
+{source: 16, target: 16, thickness: 0.0432338953739732},
+{source: 16, target: 17, thickness: 0.043233895373973194},
+{source: 16, target: 18, thickness: 0.0432338953739732},
+{source: 17, target: 16, thickness: 3.7037037037037033},
+{source: 17, target: 17, thickness: 3.7037037037037033},
+{source: 18, target: 7, thickness: 0.37174721189591076},
+{source: 18, target: 16, thickness: 0.37174721189591076}];
+// Here's were the code begins. We start off by creating an SVG
+// container to hold the visualization. We only need to specify
+// the dimensions for this container.
+
+var svg = d3.select('body').append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+// Now we create a force layout object and define its properties.
+// Those include the dimensions of the visualization and the arrays
+// of nodes and links.
+
+var force = d3.layout.force()
+    .size([width, height])
+    .nodes(nodes)
+    .links(links);
+
+// There's one more property of the layout we need to define,
+// its `linkDistance`. That's generally a configurable value and,
+// for a first example, we'd normally leave it at its default.
+// Unfortunately, the default value results in a visualization
+// that's not especially clear. This parameter defines the
+// distance (normally in pixels) that we'd like to have between
+// nodes that are connected. (It is, thus, the length we'd
+// like our links to have.)
+
+force.linkDistance(width/2);
+
+// Next we'll add the nodes and links to the visualization.
+// Note that we're just sticking them into the SVG container
+// at this point. We start with the links. The order here is
+// important because we want the nodes to appear "on top of"
+// the links. SVG doesn't really have a convenient equivalent
+// to HTML's `z-index`; instead it relies on the order of the
+// elements in the markup. By adding the nodes _after_ the
+// links we ensure that nodes appear on top of links.
+
+// Links are pretty simple. They're just SVG lines, and
+// we're not even going to specify their coordinates. (We'll
+// let the force layout take care of that.) Without any
+// coordinates, the lines won't even be visible, but the
+// markup will be sitting inside the SVG container ready
+// and waiting for the force layout.
+
+var link = svg.selectAll('.link')
+    .data(links)
+    .enter().append('line')
+    .attr('class', 'link');
+
+// Now it's the nodes turn. Each node is drawn as a circle.
+
+var node = svg.selectAll('.node')
+    .data(nodes)
+    .enter().append('circle')
+    .attr('class', 'node')
+    .attr('r', function (d) { return d.size; });
+
+// We're about to tell the force layout to start its
+// calculations. We do, however, want to know when those
+// calculations are complete, so before we kick things off
+// we'll define a function that we want the layout to call
+// once the calculations are done.
+
+force.on('end', function() {
+
+    // When this function executes, the force layout
+    // calculations have concluded. The layout will
+    // have set various properties in our nodes and
+    // links objects that we can use to position them
+    // within the SVG container.
+
+    // First let's reposition the nodes. As the force
+    // layout runs it updates the `x` and `y` properties
+    // that define where the node should be centered.
+    // To move the node, we set the appropriate SVG
+    // attributes to their new values. We also have to
+    // give the node a non-zero radius so that it's visible
+    // in the container.
+
+    node.attr('r', function (d) { return d.size; })
+        .attr('cx', function(d) { return d.x; })
+        .attr('cy', function(d) { return d.y; });
+
+    // We also need to update positions of the links.
+    // For those elements, the force layout sets the
+    // `source` and `target` properties, specifying
+    // `x` and `y` values in each case.
+
+    link.attr('x1', function(d) { return d.source.x; })
+        .attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; })
+        .attr('y2', function(d) { return d.target.y; })
+        .attr('stroke-width', function(d) { return (d.thickness*1000); });
+
+});
+
+// Okay, everything is set up now so it's time to turn
+// things over to the force layout. Here we go.
+
+force.start();
+
+// By the time you've read this far in the code, the force
+// layout has undoubtedly finished its work. Unless something
+// went horribly wrong, you should see two light grey circles
+// connected by a single dark grey line. If you have a screen
+// ruler (such as [xScope](http://xscopeapp.com) handy, measure
+// the distance between the centers of the two circles. It
+// should be somewhere close to the `linkDistance` parameter we
+// set way up in the beginning (480 pixels). That, in the most
+// basic of all nutshells, is what a force layout does. We
+// tell it how far apart we want connected nodes to be, and
+// the layout keeps moving the nodes around until they get
+// reasonably close to that value.
+
+// Of course, there's quite a bit more than that going on
+// under the hood. We'll take a closer look starting with
+// the next example.
+
+
+    </script>
+</body>
+</html>

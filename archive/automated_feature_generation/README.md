@@ -1,0 +1,3 @@
+#  Automated Feature Generation
+
+This folder contains code by Wayne Dam that uses [Feature Tools](https://github.com/Featuretools/featuretools) to autogenerate machine learning features based on the relations of a database/dataset. This is helpful in improving the accuracy of models. This hasn't yet been used in modelling for Fraud Detection, but would be a useful next step after getting some basic models into production.

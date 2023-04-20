@@ -1,0 +1,3 @@
+pymongo
+confluent_kafka
+geopy

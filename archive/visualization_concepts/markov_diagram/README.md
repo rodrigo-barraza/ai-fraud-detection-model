@@ -1,0 +1,3 @@
+# Markov Chain Transition Diagram
+
+This was a D3 visualization created to help understand a user's behaviour visually. The visualization is a Markov Chain state transition diagram where each circle represents an event type in the Mongo Database and each line represents the probability of the user transitioning between those two events compared with the average behaviour. The idea here is that if they are more ikely to transition between certain events than the normal user, this might be anomalous beheaviour worthy of investigation.

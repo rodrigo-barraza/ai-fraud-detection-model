@@ -1,0 +1,10 @@
+einsteinds
+pandas
+numpy
+pymongo
+keras
+tensorflow
+xgboost
+plotly
+scikit-learn
+scikit-optimize
